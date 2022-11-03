@@ -24,6 +24,10 @@ CLOGGER_DEP_DIR := dep/c-logger/
 CLOGGER_OBJ_DIR := obj/c-logger/
 CLOGGER_SRC_DIR := src/c-logger/
 
+LOGC_DEP_DIR := dep/log-c/
+LOGC_OBJ_DIR := obj/log-c/
+LOGC_SRC_DIR := src/log-c/
+
 SOURCES := $(shell ls $(SRC_DIR)*.c)
 OBJECTS := $(subst $(SRC_DIR),$(OBJ_DIR),$(subst .c,.o,$(SOURCES)))
 DEPFILES := $(subst $(SRC_DIR),$(DEP_DIR),$(subst .c,.d,$(SOURCES)))
@@ -36,14 +40,21 @@ CLOGGER_SOURCES := $(shell ls $(CLOGGER_SRC_DIR)*.c)
 CLOGGER_OBJECTS := $(subst $(CLOGGER_SRC_DIR),$(CLOGGER_OBJ_DIR),$(subst .c,.o,$(CLOGGER_SOURCES)))
 CLOGGER_DEPFILES := $(subst $(CLOGGER_SRC_DIR),$(CLOGGER_DEP_DIR),$(subst .c,.d,$(CLOGGER_SOURCES)))
 
+LOGC_SOURCES := $(shell ls $(LOGC_SRC_DIR)*.c)
+LOGC_OBJECTS := $(subst $(LOGC_SRC_DIR),$(LOGC_OBJ_DIR),$(subst .c,.o,$(LOGC_SOURCES)))
+LOGC_DEPFILES := $(subst $(LOGC_SRC_DIR),$(LOGC_DEP_DIR),$(subst .c,.d,$(LOGC_SOURCES)))
+
 CONTROL_CMD := control
 CLOGGER_CMD := c-logger
+LOGC_CMD := log-c
 
 CONTROL_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(CONTROL_CMD)))
 CLOGGER_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(CLOGGER_CMD)))
+LOGC_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(LOGC_CMD)))
 
 CONTROL_BIN := $(addprefix $(BIN_DIR),$(CONTROL_CMD))
 CLOGGER_BIN := $(addprefix $(BIN_DIR),$(CLOGGER_CMD))
+LOGC_BIN := $(addprefix $(BIN_DIR),$(LOGC_CMD))
 
 #==============================================================================
 # ARGUMENTS
@@ -70,7 +81,7 @@ help :
 #
 # target: run - Run all performance tests
 #
-all : control c-logger
+all : control c-logger log-c
 
 # Run control performance test
 #
@@ -81,19 +92,31 @@ control : bin $(CONTROL_BIN)
 
 # Run c-logger performance test
 #
-# target: c-logger - Run control performance test
+# target: c-logger - Run c-logger performance test
 #
 c-logger : bin logs $(CLOGGER_BIN)
 	@$(CLOGGER_BIN) $(LOG_LEVEL)
 
-# Link control executable binary for control test
+# Run log.c performance test
+#
+# target: log-c - Run log.c performance test
+#
+log-c : bin logs $(LOGC_BIN)
+	@$(LOGC_BIN) $(LOG_LEVEL)
+
+# Link executable binary for control test
 #
 $(CONTROL_BIN) : $(CONTROL_OBJ) $(SHARED_OBJECTS)
 	$(CC) $^ $(LINK_FLAGS) -o $@
 
-# Link control executable binary for control test
+# Link executable binary for c-logger test
 #
 $(CLOGGER_BIN) : $(CLOGGER_OBJ) $(SHARED_OBJECTS) $(CLOGGER_OBJECTS)
+	$(CC) $^ $(LINK_FLAGS) -o $@
+
+# Link executable binary for log.c test
+#
+$(LOGC_BIN) : $(LOGC_OBJ) $(SHARED_OBJECTS) $(LOGC_OBJECTS)
 	$(CC) $^ $(LINK_FLAGS) -o $@
 
 # Compile all source files, but do not link. As a side effect, compile a dependency file for each source file.
@@ -127,9 +150,17 @@ $(addprefix $(CLOGGER_DEP_DIR),%.d): $(addprefix $(CLOGGER_SRC_DIR),%.c)
 	$(CC) -MD -MP -MF $@ -MT '$@ $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o))' \
 		$< -c -o $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o)) $(CSTD) $(PARAMS) $(DEV_CFLAGS)
 
+# Same as above, but specifically for log.c files
+#
+$(addprefix $(LOGC_DEP_DIR),%.d): $(addprefix $(LOGC_SRC_DIR),%.c)
+	@mkdir -p $(LOGC_OBJ_DIR)
+	@mkdir -p $(LOGC_DEP_DIR)
+	$(CC) -MD -MP -MF $@ -MT '$@ $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o))' \
+		$< -c -o $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o)) $(CSTD) $(PARAMS) $(DEV_CFLAGS)
+
 # Force build of dependency and object files to import additional makefile targets
 #
--include $(DEPFILES) $(SHARED_DEPFILES) $(CLOGGER_DEPFILES)
+-include $(DEPFILES) $(SHARED_DEPFILES) $(CLOGGER_DEPFILES) $(LOGC_DEPFILES)
 
 # Make directory for binaries
 #
