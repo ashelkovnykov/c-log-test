@@ -1,6 +1,7 @@
 .idea/
 bin/
 dep/
+logs/
 obj/
 *.iml
 *.iws
