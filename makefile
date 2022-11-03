@@ -32,6 +32,10 @@ SLOG_DEP_DIR := dep/slog/
 SLOG_OBJ_DIR := obj/slog/
 SLOG_SRC_DIR := src/slog/
 
+ZF_LOG_DEP_DIR := dep/zf_log/
+ZF_LOG_OBJ_DIR := obj/zf_log/
+ZF_LOG_SRC_DIR := src/zf_log/
+
 ZLOG_DEP_DIR := dep/zlog/
 ZLOG_OBJ_DIR := obj/zlog/
 ZLOG_SRC_DIR := src/zlog/
@@ -56,6 +60,10 @@ SLOG_SOURCES := $(shell ls $(SLOG_SRC_DIR)*.c)
 SLOG_OBJECTS := $(subst $(SLOG_SRC_DIR),$(SLOG_OBJ_DIR),$(subst .c,.o,$(SLOG_SOURCES)))
 SLOG_DEPFILES := $(subst $(SLOG_SRC_DIR),$(SLOG_DEP_DIR),$(subst .c,.d,$(SLOG_SOURCES)))
 
+ZF_LOG_SOURCES := $(shell ls $(ZF_LOG_SRC_DIR)*.c)
+ZF_LOG_OBJECTS := $(subst $(ZF_LOG_SRC_DIR),$(ZF_LOG_OBJ_DIR),$(subst .c,.o,$(ZF_LOG_SOURCES)))
+ZF_LOG_DEPFILES := $(subst $(ZF_LOG_SRC_DIR),$(ZF_LOG_DEP_DIR),$(subst .c,.d,$(ZF_LOG_SOURCES)))
+
 ZLOG_SOURCES := $(shell ls $(ZLOG_SRC_DIR)*.c)
 ZLOG_OBJECTS := $(subst $(ZLOG_SRC_DIR),$(ZLOG_OBJ_DIR),$(subst .c,.o,$(ZLOG_SOURCES)))
 ZLOG_DEPFILES := $(subst $(ZLOG_SRC_DIR),$(ZLOG_DEP_DIR),$(subst .c,.d,$(ZLOG_SOURCES)))
@@ -64,18 +72,21 @@ CONTROL_CMD := control
 CLOGGER_CMD := c-logger
 LOGC_CMD := log-c
 SLOG_CMD := slog
+ZF_LOG_CMD := zf_log
 ZLOG_CMD := zlog
 
 CONTROL_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(CONTROL_CMD)))
 CLOGGER_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(CLOGGER_CMD)))
 LOGC_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(LOGC_CMD)))
 SLOG_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(SLOG_CMD)))
+ZF_LOG_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(ZF_LOG_CMD)))
 ZLOG_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(ZLOG_CMD)))
 
 CONTROL_BIN := $(addprefix $(BIN_DIR),$(CONTROL_CMD))
 CLOGGER_BIN := $(addprefix $(BIN_DIR),$(CLOGGER_CMD))
 LOGC_BIN := $(addprefix $(BIN_DIR),$(LOGC_CMD))
 SLOG_BIN := $(addprefix $(BIN_DIR),$(SLOG_CMD))
+ZF_LOG_BIN := $(addprefix $(BIN_DIR),$(ZF_LOG_CMD))
 ZLOG_BIN := $(addprefix $(BIN_DIR),$(ZLOG_CMD))
 
 #==============================================================================
@@ -103,7 +114,7 @@ help :
 #
 # target: run - Run all performance tests
 #
-all : control c-logger log-c slog zlog
+all : control c-logger log-c slog zf_log zlog
 
 # Run control performance test
 #
@@ -133,6 +144,13 @@ log-c : bin logs $(LOGC_BIN)
 slog : bin logs $(SLOG_BIN)
 	@$(SLOG_BIN) $(LOG_LEVEL)
 
+# Run zf_log performance test
+#
+# target: zf_log - Run zf_log performance test
+#
+zf_log : bin logs $(ZF_LOG_BIN)
+	@$(ZF_LOG_BIN) $(LOG_LEVEL)
+
 # Run zlog performance test
 #
 # target: zlog - Run zlog performance test
@@ -158,6 +176,11 @@ $(LOGC_BIN) : $(LOGC_OBJ) $(SHARED_OBJECTS) $(LOGC_OBJECTS)
 # Link executable binary for slog test
 #
 $(SLOG_BIN) : $(SLOG_OBJ) $(SHARED_OBJECTS) $(SLOG_OBJECTS)
+	$(CC) $^ $(LINK_FLAGS) -o $@
+
+# Link executable binary for zf_log test
+#
+$(ZF_LOG_BIN) : $(ZF_LOG_OBJ) $(SHARED_OBJECTS) $(ZF_LOG_OBJECTS)
 	$(CC) $^ $(LINK_FLAGS) -o $@
 
 # Link executable binary for zlog test
@@ -212,6 +235,14 @@ $(addprefix $(SLOG_DEP_DIR),%.d): $(addprefix $(SLOG_SRC_DIR),%.c)
 	$(CC) -MD -MP -MF $@ -MT '$@ $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o))' \
 		$< -c -o $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o)) $(CSTD) $(PARAMS) $(DEV_CFLAGS)
 
+# Same as above, but specifically for zf_log files
+#
+$(addprefix $(ZF_LOG_DEP_DIR),%.d): $(addprefix $(ZF_LOG_SRC_DIR),%.c)
+	@mkdir -p $(ZF_LOG_OBJ_DIR)
+	@mkdir -p $(ZF_LOG_DEP_DIR)
+	$(CC) -MD -MP -MF $@ -MT '$@ $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o))' \
+		$< -c -o $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o)) $(CSTD) $(PARAMS) $(DEV_CFLAGS)
+
 # Same as above, but specifically for zlog files
 #
 $(addprefix $(ZLOG_DEP_DIR),%.d): $(addprefix $(ZLOG_SRC_DIR),%.c)
@@ -222,7 +253,7 @@ $(addprefix $(ZLOG_DEP_DIR),%.d): $(addprefix $(ZLOG_SRC_DIR),%.c)
 
 # Force build of dependency and object files to import additional makefile targets
 #
--include $(DEPFILES) $(SHARED_DEPFILES) $(CLOGGER_DEPFILES) $(LOGC_DEPFILES) $(SLOG_DEPFILES) $(ZLOG_DEPFILES)
+-include $(DEPFILES) $(SHARED_DEPFILES) $(CLOGGER_DEPFILES) $(LOGC_DEPFILES) $(SLOG_DEPFILES) $(ZF_LOG_DEPFILES) $(ZLOG_DEPFILES)
 
 # Make directory for binaries
 #
