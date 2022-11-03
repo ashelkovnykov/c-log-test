@@ -32,7 +32,7 @@ main(int argc, char** argv) {
   env->tear_down_func = _log_c_tear_down;
   env->logLevel = logLevel;
 
-  run_test(env, "control");
+  run_test(env, "log.c");
 }
 
 void*
