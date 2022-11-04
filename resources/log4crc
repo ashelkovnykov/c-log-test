@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE log4c SYSTEM "">
+
+<log4c>
+
+  <config>
+    <bufsize>4096</bufsize>
+    <debug level="0"/>
+    <nocleanup>0</nocleanup>
+  </config>
+
+  <!-- layouts ============================================================= -->
+  <layout name="basic" type="basic"/>
+
+  <!-- file rotation policy ================================================ -->
+  <rollingpolicy name="policy" type="sizewin" maxsize="26214400" maxnum="255" />
+
+  <!-- appenders =========================================================== -->
+  <appender name="file" type="rollingfile" logdir="logs" prefix="log4c" layout="dated" rollingpolicy="policy"/>
+
+  <!-- categories ========================================================== -->
+  <category name="0" priority="unknown" appender="file"/>
+  <category name="1" priority="notset" appender="file"/>
+  <category name="2" priority="trace" appender="file"/>
+  <category name="3" priority="debug" appender="file"/>
+  <category name="4" priority="info" appender="file"/>
+  <category name="5" priority="notice" appender="file"/>
+  <category name="6" priority="warn" appender="file"/>
+  <category name="7" priority="error" appender="file"/>
+  <category name="8" priority="crit" appender="file"/>
+  <category name="9" priority="alert" appender="file"/>
+  <category name="10" priority="fatal" appender="file"/>
+
+</log4c>

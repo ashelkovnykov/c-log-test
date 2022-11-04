@@ -24,6 +24,10 @@ CLOGGER_DEP_DIR := dep/c-logger/
 CLOGGER_OBJ_DIR := obj/c-logger/
 CLOGGER_SRC_DIR := src/c-logger/
 
+LOG4C_DEP_DIR := dep/log4c/
+LOG4C_OBJ_DIR := obj/log4c/
+LOG4C_SRC_DIR := src/log4c/
+
 LOGC_DEP_DIR := dep/log-c/
 LOGC_OBJ_DIR := obj/log-c/
 LOGC_SRC_DIR := src/log-c/
@@ -52,6 +56,10 @@ CLOGGER_SOURCES := $(shell ls $(CLOGGER_SRC_DIR)*.c)
 CLOGGER_OBJECTS := $(subst $(CLOGGER_SRC_DIR),$(CLOGGER_OBJ_DIR),$(subst .c,.o,$(CLOGGER_SOURCES)))
 CLOGGER_DEPFILES := $(subst $(CLOGGER_SRC_DIR),$(CLOGGER_DEP_DIR),$(subst .c,.d,$(CLOGGER_SOURCES)))
 
+LOG4C_SOURCES := $(shell ls $(LOG4C_SRC_DIR)*.c)
+LOG4C_OBJECTS := $(subst $(LOG4C_SRC_DIR),$(LOG4C_OBJ_DIR),$(subst .c,.o,$(LOG4C_SOURCES)))
+LOG4C_DEPFILES := $(subst $(LOG4C_SRC_DIR),$(LOG4C_DEP_DIR),$(subst .c,.d,$(LOG4C_SOURCES)))
+
 LOGC_SOURCES := $(shell ls $(LOGC_SRC_DIR)*.c)
 LOGC_OBJECTS := $(subst $(LOGC_SRC_DIR),$(LOGC_OBJ_DIR),$(subst .c,.o,$(LOGC_SOURCES)))
 LOGC_DEPFILES := $(subst $(LOGC_SRC_DIR),$(LOGC_DEP_DIR),$(subst .c,.d,$(LOGC_SOURCES)))
@@ -70,6 +78,7 @@ ZLOG_DEPFILES := $(subst $(ZLOG_SRC_DIR),$(ZLOG_DEP_DIR),$(subst .c,.d,$(ZLOG_SO
 
 CONTROL_CMD := control
 CLOGGER_CMD := c-logger
+LOG4C_CMD := log4c
 LOGC_CMD := log-c
 SLOG_CMD := slog
 ZF_LOG_CMD := zf_log
@@ -77,6 +86,7 @@ ZLOG_CMD := zlog
 
 CONTROL_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(CONTROL_CMD)))
 CLOGGER_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(CLOGGER_CMD)))
+LOG4C_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(LOG4C_CMD)))
 LOGC_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(LOGC_CMD)))
 SLOG_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(SLOG_CMD)))
 ZF_LOG_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(ZF_LOG_CMD)))
@@ -84,6 +94,7 @@ ZLOG_OBJ := $(addsuffix .o,$(addprefix $(OBJ_DIR),$(ZLOG_CMD)))
 
 CONTROL_BIN := $(addprefix $(BIN_DIR),$(CONTROL_CMD))
 CLOGGER_BIN := $(addprefix $(BIN_DIR),$(CLOGGER_CMD))
+LOG4C_BIN := $(addprefix $(BIN_DIR),$(LOG4C_CMD))
 LOGC_BIN := $(addprefix $(BIN_DIR),$(LOGC_CMD))
 SLOG_BIN := $(addprefix $(BIN_DIR),$(SLOG_CMD))
 ZF_LOG_BIN := $(addprefix $(BIN_DIR),$(ZF_LOG_CMD))
@@ -114,7 +125,7 @@ help :
 #
 # target: run - Run all performance tests
 #
-all : control c-logger log-c slog zf_log zlog
+all : control c-logger log4c log-c slog zf_log zlog
 
 # Run control performance test
 #
@@ -129,6 +140,13 @@ control : bin $(CONTROL_BIN)
 #
 c-logger : bin logs $(CLOGGER_BIN)
 	@$(CLOGGER_BIN) $(LOG_LEVEL)
+
+# Run log4c performance test
+#
+# target: log4c - Run log4c performance test
+#
+log4c : bin logs $(LOG4C_BIN)
+	@$(LOG4C_BIN) $(LOG_LEVEL)
 
 # Run log.c performance test
 #
@@ -166,6 +184,11 @@ $(CONTROL_BIN) : $(CONTROL_OBJ) $(SHARED_OBJECTS)
 # Link executable binary for c-logger test
 #
 $(CLOGGER_BIN) : $(CLOGGER_OBJ) $(SHARED_OBJECTS) $(CLOGGER_OBJECTS)
+	$(CC) $^ $(LINK_FLAGS) -o $@
+
+# Link executable binary for log4c test
+#
+$(LOG4C_BIN) : $(LOG4C_OBJ) $(SHARED_OBJECTS) $(LOG4C_OBJECTS)
 	$(CC) $^ $(LINK_FLAGS) -o $@
 
 # Link executable binary for log.c test
@@ -219,6 +242,14 @@ $(addprefix $(CLOGGER_DEP_DIR),%.d): $(addprefix $(CLOGGER_SRC_DIR),%.c)
 	$(CC) -MD -MP -MF $@ -MT '$@ $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o))' \
 		$< -c -o $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o)) $(CSTD) $(PARAMS) $(DEV_CFLAGS)
 
+# Same as above, but specifically for log4c files
+#
+$(addprefix $(LOG4C_DEP_DIR),%.d): $(addprefix $(LOG4C_SRC_DIR),%.c)
+	@mkdir -p $(LOG4C_OBJ_DIR)
+	@mkdir -p $(LOG4C_DEP_DIR)
+	$(CC) -MD -MP -MF $@ -MT '$@ $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o))' \
+		$< -c -o $(subst $(DEP_DIR),$(OBJ_DIR),$(@:.d=.o)) $(CSTD) $(PARAMS) $(DEV_CFLAGS)
+
 # Same as above, but specifically for log.c files
 #
 $(addprefix $(LOGC_DEP_DIR),%.d): $(addprefix $(LOGC_SRC_DIR),%.c)
@@ -253,7 +284,7 @@ $(addprefix $(ZLOG_DEP_DIR),%.d): $(addprefix $(ZLOG_SRC_DIR),%.c)
 
 # Force build of dependency and object files to import additional makefile targets
 #
--include $(DEPFILES) $(SHARED_DEPFILES) $(CLOGGER_DEPFILES) $(LOGC_DEPFILES) $(SLOG_DEPFILES) $(ZF_LOG_DEPFILES) $(ZLOG_DEPFILES)
+-include $(DEPFILES) $(SHARED_DEPFILES) $(CLOGGER_DEPFILES) $(LOGC_DEPFILES) $(LOG4C_DEPFILES) $(SLOG_DEPFILES) $(ZF_LOG_DEPFILES) $(ZLOG_DEPFILES)
 
 # Make directory for binaries
 #
