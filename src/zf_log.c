@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+
 #include "zf_log/zf_log.h"
 #include "shared/funcs.h"
 
@@ -45,7 +47,6 @@ _zf_log_setup(uint8_t logLevel) {
   }
 
   zf_log_set_output_v(ZF_LOG_PUT_STD, fileHandle, _zf_file_output_callback);
-  zf_log_set_output_level((int)logLevel);
 
   return fileHandle;
 }
