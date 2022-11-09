@@ -58,7 +58,10 @@ _zf_log_logging(uint32_t m, uint32_t n) {
 
 void
 _zf_log_tear_down(void* arg) {
-  fclose((FILE*)arg);
+  FILE* fileHandle = (FILE*)arg;
+
+  fflush(fileHandle);
+  fclose(fileHandle);
 }
 
 void
@@ -69,5 +72,4 @@ _zf_file_output_callback(const zf_log_message *msg, void *arg)
   *msg->p = '\n';
 
   fwrite(msg->buf, msg->p - msg->buf + 1, 1, fileHandle);
-  fflush(fileHandle);
 }
