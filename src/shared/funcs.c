@@ -78,7 +78,7 @@ run_test(TestSetup* testSetup, const char* description) {
   if (result == NULL) {
     _report_failure("Execution failure");
   }
-  printf("%s: runtime = %.3f s, result = %u\n", description, result->time, result->a);
+  printf("%s: runtime = %.5f s, result = %u\n", description, result->time, result->a);
 
   //
   // Clean up

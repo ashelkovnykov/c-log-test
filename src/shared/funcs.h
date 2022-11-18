@@ -5,7 +5,7 @@
 #include "types.h"
 
 #define ACKERMANN_M 3
-#define ACKERMANN_N 10
+#define ACKERMANN_N 6
 
 //==============================================================================
 // Prototypes
