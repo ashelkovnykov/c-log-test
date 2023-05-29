@@ -1,0 +1,301 @@
+////////////////////////////////////////////////////////////////////////////////
+//  SOURCES
+////////////////////////////////////////////////////////////////////////////////
+
+- https://apenwarr.ca/log/20190216
+- https://www.loggly.com/blog/measuring-the-impact-of-logging-on-your-application/
+- https://stackoverflow.com/questions/1235958/ipc-performance-named-pipe-vs-socket
+- https://man7.org/linux/man-pages/man3/mq_send.3.html
+- https://www.baeldung.com/linux/ipc-performance-comparison
+
+
+////////////////////////////////////////////////////////////////////////////////
+//  OPEN QUESTIONS
+////////////////////////////////////////////////////////////////////////////////
+
+WHAT DOES VERE ALREADY DO?
+    - Vere already tracks a bunch of stuff
+        - Like what?
+            - "How many packets from this IP"
+            - "How many packets from this ship"
+        - Where does it go?
+            - Just dojo/stderr
+        - daemon/main.c
+        - Json/trace
+            - trace.h/trace.c
+    - u3l_log
+        - Not permissable in some situations, since it makes assumptions about whether king/serf are both up and running
+    - fprintf
+
+
+////////////////////////////////////////////////////////////////////////////////
+//  NOTES
+////////////////////////////////////////////////////////////////////////////////
+
+- Techniques
+    - "double-buffering"
+        - Shared buffer between two threads
+        - Producer thread writes to the back of the buffer
+        - Consumer thread reads from the front, chasing the producer
+    - "print spooling"
+        - Only print full buffers, unless explicitly told to
+- Gotchas
+    - flushing the buffer too often can kill performance
+        - writing more data at one time is more efficient, since everything is "hot" or "spinning"
+            - archaic terms that don't really capture why it's faster any more but are still in use
+    - formatting can take a lot of time
+- Other projects
+    - Chrome
+        - Mojo
+            - provides IPC primitives and auto-generates code in C++, Java, and JS for using them
+    - Arcan
+        - Shared memory IPC
+    - Cosmopolitan C
+    - ZeroMQ Universal Messaging Library: https://zeromq.org
+
+
+////////////////////////////////////////////////////////////////////////////////
+//  RESEARCH
+////////////////////////////////////////////////////////////////////////////////
+
+Metrics:
+- Performance
+    - Logging is not free, and traversing parsing rules each function call adds up
+- Features
+    - A wide range of features makes it easier for us to fit the logger to our needs, and not the other way around
+- Documentation
+    - A poorly documented library wastes developer time and doesn't inspire confidence in the product
+- Adoption
+    - More users means more eyes, means more bug reports, means more bug fixes, means more documentation, means more guides
+
+
+Contenders:
+- c-logger
+    - https://github.com/yksz/c-logger
+- log.c
+    - https://github.com/rxi/log.c
+- log4c
+    - https://log4c.sourceforge.net/index.html
+- slog
+    - https://github.com/kala13x/slog
+- zlog
+    - https://github.com/HardySimpson/zlog
+    - http://hardysimpson.github.io/zlog/UsersGuide-EN.html
+- zf_log
+    - https://github.com/wonder-mice/zf_log
+- DIY
+    - "Just write your own" is a shockingly common answer from the C community to people asking about logging libraries
+
+
+Evaluation:
+- c-logger
+    - Features:
+        - Multiple logging levels
+            - TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+        - Log output:
+            - console
+            - file
+        - Append log message to multiple outputs
+        - Thread safe (automatic)
+        - Log file rotation:
+            - size
+        - Settings controlled through API
+        - C89 support
+        - MIT LICENSE
+    - Documentation:
+        - GitHub README
+        - Minimal documentation
+    - Adoption:
+        - GitHub repo
+            - 75 stars
+            - 2 contributors
+            - Latest release: JUN 06, 2017
+            - Latest change:  DEC 27, 2021
+            - Issues:
+                - Open:   2
+                - Closed: 0
+                - Latest comment: AUG 30, 2022
+            - PRs:
+                - Open:   0
+                - Closed: 3
+                - Latest comment: DEC 27, 2021
+        - StackOverflow
+            - Tag does not exist
+            - 0 issues directly referring to c-logger
+- log.c
+    - Features:
+        - Multiple logging levels
+            - TRACE, DEBUG, INFO, WARN, ERROR, FATAL
+        - Log output:
+            - console
+            - file
+        - Append log message to multiple outputs
+        - Thread safe (manual locking)
+        - Settings controlled through API
+        - MIT LICENSE
+    - Documentation:
+        - GitHub README
+        - Minimal documentation
+    - Adoption:
+        - GitHub
+            - 1672 stars
+            - 1 contributor
+            - Latest release: NEVER
+            - Latest change:  JUN 20, 2020
+            - Issues:
+                - Open:   10
+                - Closed: 6
+                - Latest comment: OCT 26, 2020
+            - PRs:
+                - Open:   13
+                - Closed: 2
+                - Latest comment: JAN 01, 2021
+        - StackOverflow
+            - Tag does not exist
+            - 0 issues directly referring to log.c
+- log4c
+    - Features:
+        - Based on last update and version number, it seems that this lib should have all of the features that log4j did at version 1.2.X
+            - https://logging.apache.org/log4j//1.2/manual.html
+            - Multiple logging levels
+                - UNKNOWN, NOTSET, TRACE, DEBUG, INFO, NOTICE, WARN, ERROR, CRIT, ALERT, FATAL
+            - Custom logging levels (although heavily discouraged)
+            - Log output:
+                - console
+                - file
+                - syslog
+                - GUI
+                - sockets
+            - Append log message to multiple outputs
+            - Customizable log message format
+            - Not thread safe (needs to be managed externally)
+            - Settings controlled through XML configuration file
+        - LGPL 1.0 LICENSE
+    - Documentation:
+        - Old PDF that lives on SlideShare
+            - https://www.slideshare.net/gzm55/log4-c-developers-guide-presentation
+        - Small amount of documentation in the '../doc' dir of the source code
+        - Lots of great quotes for a project that hasn't been touched in almost a decade:
+            - "This section will, one day, briefly describe how to define custom appenders and custom layouts. Be patient or checkout the source."
+    - Adoption:
+        - GitHub repo
+            - Does not exist
+            - Code lives on SourceForge
+            - Last updated OCT 03, 2013
+            - Last comment APR 17, 2014
+        - StackOverflow
+            - 15 questions with tag 'log4c'
+            - # questions in last 6 months: 3
+            - # views in last 6 months:     192
+            - Most recent question: AUG 10, 2022
+            - Most recent answer:   JUN 11, 2022
+- slog
+    - Features:
+        - Multiple logging levels
+            - NOTAG, LIVE, INFO, WARN, DEBUG, TRACE, ERROR, FATAL
+        - Log output:
+            - console
+            - file
+        - Append log message to multiple outputs
+        - Customizable log message format
+        - Thread safe (automatic)
+        - Settings controlled through API
+        - MIT LICENSE
+    - Documentation:
+        - GitHub README
+        - Throrough documentation
+    - Adoption:
+        - GitHub repo
+            - 106 stars
+            - 11 contributors
+            - Latest release: DEC 13, 2020
+            - Latest change:  JUL 31, 2022
+            - Issues:
+                - Open:   1
+                - Closed: 6
+                - Latest comment: JAN 27, 2022
+            - PRs:
+                - Open:   0
+                - Closed: 15
+                - Latest comment: NOV 29, 2021
+        - StackOverflow
+            - Tag does not exist
+            - 0 issues directly referring to slog
+- zlog
+    - Features:
+        - Multiple logging levels
+            - DEBUG, INFO, NOTICE, WARN, ERROR, FATAL, UNKNOWN
+        - Custom logging levels
+        - Log output:
+            - console
+            - file
+            - syslog
+            - user-defined output
+        - Append log message to multiple outputs
+        - Customizable log message format
+        - Thread safe (automatic)
+        - Log file rotation:
+            - date
+            - size
+            - both
+        - Settings controlled through configuration file
+            - Can reload settings during runtime
+        - Self-debugging
+        - LGPL 2.1 LICENSE
+    - Documentation:
+        - User's guide: http://hardysimpson.github.io/zlog/UsersGuide-EN.html
+        - Exceptional quality of documentation
+    - Adoption:
+        - GitHub
+            - 1716 stars
+            - 32 contributors
+            - Latest release: AUG 15, 2022
+            - Latest change:  JUL 20, 2022
+            - Issues:
+                - Open:   98
+                - Closed: 63
+                - Latest comment: OCT 26, 2022
+            - PRs:
+                - Open:   3
+                - Closed: 60
+                - Latest comment: SEP 12, 2022
+        - StackOverflow
+            - Tag does not exist
+            - 16 issues directly referring to zlog
+            - Most recent question: APR 29, 2020
+            - Most recent answer:   NOV 21, 2019
+- zf_log
+    - Features:
+        - Multiple logging levels
+            - VERBOSE, DEBUG, INFO, WARN, ERROR, FATAL, NONE
+        - Log output:
+            - console
+            - user-defined output
+        - Customizable log message format
+        - Thread safe (automatic)
+        - Settings controlled at compile time
+        - MIT LICENSE
+    - Documentation:
+        - GitHub README
+        - Acceptable documentation
+            - Not entirely thorough; attempts to make up for this with code examples
+    - Adoption:
+        - GitHub repo
+            - 175 Stars
+            - 7 Contributors
+            - Latest release: APR 27, 2016
+            - Latest change:  AUG 07, 2019
+            - Issues:
+                - Open:   7
+                - Closed: 23
+                - Latest comment: SEP 25, 2020
+            - PRs:
+                - Open:   3
+                - Closed: 14
+                - Latest comment: MAR 11, 2021
+        - StackOverflow
+            - Tag does not exist
+            - Found 4 issues directly referring to it
+            - Most recent question: NEVER
+            - Most recent answer:   JAN 31, 2016
+
